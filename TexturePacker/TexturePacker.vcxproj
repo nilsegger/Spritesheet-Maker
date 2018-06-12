@@ -116,6 +116,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="Spritesheetmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileSelector.h" />

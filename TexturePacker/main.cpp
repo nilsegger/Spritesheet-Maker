@@ -4,7 +4,9 @@ int main() {
 
 	Image img("C:/Users/NILSEGGE/frame0033/frame0000.png");
 
-	img.load();
+	if (!img.load()) {
+		std::cout << "Unable to open file" << std::endl;
+	}
 
 	img.crop();
 
