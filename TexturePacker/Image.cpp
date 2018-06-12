@@ -38,18 +38,24 @@ void Image::crop()
 
 void Image::scale(float amount)
 {
-	float step = 1 / amount;
-	sf::Vector2u offset = { image->getSize().x / unsigned int(step), image->getSize().y / unsigned int(step) };
+
 	sf::Image * tempImage = new sf::Image;
-	tempImage->create(image->getSize().x / unsigned int(step), image->getSize().y / unsigned int(step), sf::Color::White);
-	float x, y;
-	for (y = 0.f; unsigned int(y) < image->getSize().y; y += step) {
+	tempImage->create(image->getSize().x * amount, image->getSize().y * amount, sf::Color::White);
+
+	for (unsigned int y = 0; y < tempImage->getSize().y; y++) {
+		for (unsigned int x = 0; x < tempImage->getSize().x; x++) {
+			sf::Color pixelColor = image->getPixel(x / amount, y / amount);
+			tempImage->setPixel(x, y, pixelColor);
+		}
+	}
+	
+	/*for (y = 0.f; unsigned int(y) < image->getSize().y; y += step) {
 		for (x = 0.f; unsigned int(x) < image->getSize().x; x += step) {
 			sf::Vector2u pixel = { unsigned int(x * amount), unsigned int(y * amount) };
 			if (pixel.x >= tempImage->getSize().x || pixel.y >= tempImage->getSize().y) continue;
 			tempImage->setPixel(pixel.x, pixel.y, image->getPixel(unsigned int(x),unsigned int(y)));
 		}
-	}
+	}*/
 	delete image;
 	image = tempImage;
 }

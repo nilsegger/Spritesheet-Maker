@@ -2,7 +2,6 @@
 #include "Image.h"
 #include "Spritesheetmaker.h"
 int main() {
-
 	std::vector<std::string> files = FileSelector::selectFiles();
 	if (files.size() == 0) return -1;
 	std::cout << files.size() << " files selected." << std::endl;
