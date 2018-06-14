@@ -8,6 +8,11 @@ SpriteSheet::SpriteSheet(sf::Vector2u size, std::vector<Image*> images)
 	placeImages();
 }
 
+sf::Image * SpriteSheet::getSpritesheet()
+{
+	return spritesheet;
+}
+
 void SpriteSheet::placeImages()
 {
 	unsigned int x = 0, y = 0;
@@ -45,13 +50,13 @@ void SpriteSheet::placeImages()
 		*/
 		delete image;
 	}
-	saveSpritesheet();
+	//saveSpritesheet();
 }
 
 void SpriteSheet::placeImage(sf::Image * image, unsigned int x, unsigned int y)
 {
-	for (int ix = 0; ix < image->getSize().x; ix++) {
-		for (int iy = 0; iy < image->getSize().y; iy++) {
+	for (unsigned int ix = 0; ix < image->getSize().x; ix++) {
+		for (unsigned int iy = 0; iy < image->getSize().y; iy++) {
 			spritesheet->setPixel(x + ix, y + iy, image->getPixel(ix, iy));
 		}
 	}

@@ -9,6 +9,8 @@ class SpriteSheet {
 public:
 	SpriteSheet(sf::Vector2u size, std::vector<Image*> images);
 
+	sf::Image * getSpritesheet();
+	void saveSpritesheet(std::string path = "C:/Users/NILSEGGE/Pictures/spritesheet.png");
 private:
 	std::vector<Image*> images;
 	sf::Vector2u size;
@@ -20,5 +22,5 @@ private:
 	void placeImages();
 	void placeImage(sf::Image * image, unsigned int x, unsigned int y);
 	bool imageFits(sf::Image * image, unsigned int x, unsigned int y);
-	void saveSpritesheet(std::string path = "C:/Users/Nils/Source/Repos/TexturePacker/TexturePacker/spritesheet.png");
+	
 };

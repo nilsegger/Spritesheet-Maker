@@ -21,10 +21,25 @@ void Image::crop()
 	sf::Vector2u size = image->getSize();
 	sf::Vector2u p1;
 	sf::Vector2u p2;
+
+	/*std::thread t0(&Image::findTop, this, &p1.y);
+	std::thread t1(&Image::findBottom, this, &p2.y);
+	std::thread t2(&Image::findLeft, this, &p1.x);
+	std::thread t3(&Image::findRight, this, &p2.x);
+	
+	t0.join();
+	t1.join();
+	t2.join();
+	t3.join();*/
 	findTop(&p1.y);
 	findBottom(&p2.y);
 	findLeft(&p1.x);
 	findRight(&p2.x);
+
+	//if (!findBorders(&p1.x, &p2.x, &p1.y, &p2.y)) return;
+
+	std::cout << p1.x << "#" << p1.y << "-" << p2.x << "#" << p2.y << std::endl;
+
 	sf::Image * tempImage = new sf::Image;
 	tempImage->create(p2.x - p1.x, p2.y - p1.y, sf::Color::White);
 	for (unsigned int x = p1.x; x < p2.x; x++) {
@@ -38,26 +53,163 @@ void Image::crop()
 
 void Image::scale(float amount)
 {
-
+	if (amount == 1.f) return;
 	sf::Image * tempImage = new sf::Image;
-	tempImage->create(image->getSize().x * amount, image->getSize().y * amount, sf::Color::White);
+	tempImage->create(unsigned int(image->getSize().x * amount), unsigned int(image->getSize().y * amount), sf::Color::White);
 
 	for (unsigned int y = 0; y < tempImage->getSize().y; y++) {
 		for (unsigned int x = 0; x < tempImage->getSize().x; x++) {
-			sf::Color pixelColor = image->getPixel(x / amount, y / amount);
+			sf::Color pixelColor = image->getPixel(unsigned int(x / amount), unsigned int(y / amount));
 			tempImage->setPixel(x, y, pixelColor);
 		}
 	}
-	
-	/*for (y = 0.f; unsigned int(y) < image->getSize().y; y += step) {
-		for (x = 0.f; unsigned int(x) < image->getSize().x; x += step) {
-			sf::Vector2u pixel = { unsigned int(x * amount), unsigned int(y * amount) };
-			if (pixel.x >= tempImage->getSize().x || pixel.y >= tempImage->getSize().y) continue;
-			tempImage->setPixel(pixel.x, pixel.y, image->getPixel(unsigned int(x),unsigned int(y)));
-		}
-	}*/
+
 	delete image;
 	image = tempImage;
+}
+
+void Image::scale2(float amount)
+{
+	sf::Image * tempImage = new sf::Image;
+	tempImage->create(unsigned int(image->getSize().x * amount), unsigned int(image->getSize().y * amount), sf::Color::White);
+
+	for (unsigned int y = 0; y < tempImage->getSize().y; y++) {
+		for (unsigned int x = 0; x < tempImage->getSize().x; x++) {
+
+			std::vector<sf::Vector2u> pixels = getNeighbourPixels(tempImage, x, y, amount);
+			
+			unsigned int r = 0, g = 0, b = 0, a = 0;
+
+			for (int i = 0; i < int(pixels.size()); i++) {
+				r += image->getPixel(pixels[i].x, pixels[i].y).r;
+				g += image->getPixel(pixels[i].x, pixels[i].y).g;
+				b += image->getPixel(pixels[i].x, pixels[i].y).b;
+				a += image->getPixel(pixels[i].x, pixels[i].y).a;
+			}
+
+			r /= unsigned int(pixels.size());
+			g /= unsigned int(pixels.size());
+			b /= unsigned int(pixels.size());
+			a /= unsigned int(pixels.size());
+
+			sf::Color pixelColor = sf::Color::Color(r,g,b,a);
+			tempImage->setPixel(x, y, pixelColor);
+
+		}
+
+	}
+
+	delete image;
+	image = tempImage;
+}
+
+void Image::scale3(float amount)
+{
+	
+	unsigned int splits = std::thread::hardware_concurrency();
+		
+	if (splits == 1) {
+		scale(amount);
+		return;
+	}
+
+	if (amount == 1.f) return;
+	sf::Image * tempImage = new sf::Image;
+	tempImage->create(unsigned int(image->getSize().x * amount), unsigned int(image->getSize().y * amount), sf::Color::White);
+
+	std::thread * threads[100];
+	
+	unsigned int ySize = tempImage->getSize().y / splits;
+
+	for (unsigned int i = 0; i < splits; i++) {
+		//std::cout << "Y1 " << i * ySize << " Y2 " << i * ySize + ySize - 1 << std::endl;
+		threads[i] = new std::thread(&Image::scale3placePixels, this, tempImage, i * ySize, i * ySize + ySize - 1, amount);
+	}
+
+
+	for (unsigned int i = 0; i < splits; i++) {
+		threads[i]->join();
+		delete threads[i];
+	}
+
+	/*for (unsigned int y = 0; y < tempImage->getSize().y; y++) {
+		for (unsigned int x = 0; x < tempImage->getSize().x; x++) {
+			sf::Color pixelColor = image->getPixel(unsigned int(x / amount), unsigned int(y / amount));
+			tempImage->setPixel(x, y, pixelColor);
+		}
+	}*/
+
+	delete image;
+	image = tempImage;
+}
+
+void Image::scale3placePixels(sf::Image * tempImage, unsigned int y1, unsigned int y2, float amount)
+{
+
+	for (unsigned int y = y1; y < y2; y++) {
+		for (unsigned int x = 0; x < tempImage->getSize().x; x++) {
+			tempImage->setPixel(x, y, image->getPixel(unsigned int(x / amount), unsigned int(y / amount)));
+		}
+	}
+}
+
+void Image::setPixelArray()
+{
+	pixelArray = new sf::Uint8[image->getSize().x * image->getSize().y * 6]; //rgba, xy
+
+	unsigned int x1 = image->getSize().x, x2 = 0, y1 = image->getSize().y, y2 = 0;
+
+	for (unsigned int y = 0; y < image->getSize().y; y++) {
+		for (unsigned int x = 0; x < image->getSize().x; x++) {
+			if (hasPixel(x, y)) {
+				if (x < x1) x1 = x;
+				if (x > x2) x2 = x;
+				if (y < y1) y1 = y;
+				if (y > y2) y2 = y;
+				pixelArray[pixelsCount * 6] = image->getPixel(x, y).r;
+				pixelArray[pixelsCount * 6 + 1] = image->getPixel(x, y).g;
+				pixelArray[pixelsCount * 6 + 2] = image->getPixel(x, y).b;
+				pixelArray[pixelsCount * 6 + 3] = image->getPixel(x, y).a;
+				pixelArray[pixelsCount * 6 + 4] = x;
+				pixelArray[pixelsCount * 6 + 5] = y;
+				pixelsCount++;
+			}
+		}
+	}
+
+	std::cout << x1 << "#" << y1 << "-" << x2 << "#" << y2 << std::endl;
+
+	sf::Image tempImg;
+	tempImg.create(x2 - x1, y2 - y1, sf::Color::Transparent);
+
+	for (int i = 0; i < pixelsCount; i++) {
+		int index = i * 6;
+		int posx = pixelArray[index + 4] - x1;
+		int posy = pixelArray[index + 5] - y1;
+		tempImg.setPixel(posx, posy, sf::Color::Color(pixelArray[index], pixelArray[index+1], pixelArray[index+2], pixelArray[index+3]));
+	}
+
+	tempImg.saveToFile("C:/Users/NILSEGGE/frame0033/test.png");
+
+	//make test pixel array for lulz
+	/*sf::Image testimg;
+	testimg.create(x2 - x1, y2 - y1, sf::Color::Transparent);
+	
+	unsigned int x = 0, y = 0;
+
+	for (int i = 0; i < testpixelcount; i++, x++) {
+
+		if (x == testimg.getSize().x) {
+			x = 0;
+			y++;
+		}
+			testimg.setPixel(x, y, sf::Color::Color(testpixelarr[i * 4], testpixelarr[i * 4 + 1], testpixelarr[i * 4 + 2], testpixelarr[i * 4 + 3]));
+			//std::cout << x << "#" << y << "#" << testpixelarr[i * 4] << "#" << testpixelarr[i * 4 + 1] << "#" << testpixelarr[i * 4 + 2] << "#" << testpixelarr[i * 4 + 3] << std::endl;
+			//getchar();
+	}
+ 
+	testimg.saveToFile("C:/Users/NILSEGGE/frame0033/test.png");*/
+	
 }
 
 sf::Image * Image::getImage() const
@@ -104,6 +256,7 @@ void Image::findLeft(unsigned int* left)
 void Image::findRight(unsigned int * right)
 {
 	for (unsigned int x = image->getSize().x - 1; x >= 0; x--) {
+
 		for (unsigned int y = 0; y < image->getSize().y; y++) {
 			if (image->getPixel(x, y).a != 0.f) {
 				*right = x;
@@ -111,6 +264,63 @@ void Image::findRight(unsigned int * right)
 			}
 		}
 	}
+}
+
+
+
+std::vector<sf::Vector2u> Image::getNeighbourPixels(sf::Image * img, unsigned int x, unsigned int y, float step)
+{
+	std::vector<sf::Vector2u> neighbours;
+	neighbours.push_back({x,y});
+	neighbours.push_back({ x-1,y-1 });
+	neighbours.push_back({ x,y - 1 });
+	neighbours.push_back({ x+1,y - 1 });
+	neighbours.push_back({ x-1,y });
+	neighbours.push_back({ x+1,y});
+	neighbours.push_back({ x-1,y + 1 });
+	neighbours.push_back({ x,y + 1 });
+	neighbours.push_back({ x+1,y + 1 });
+
+	std::vector<sf::Vector2u> scaled;
+
+	for (int i = 0; i < int(neighbours.size()); i++) {
+		if (pixelFits(img, neighbours[i].x, neighbours[i].y)) {
+			if (pixelFits(image, unsigned int(neighbours[i].x / step), unsigned int(neighbours[i].y / step))) {
+				scaled.push_back({ unsigned int(neighbours[i].x / step), unsigned int(neighbours[i].y / step) });
+			}
+		}
+	}
+
+	if (scaled.size() == 0) return std::vector<sf::Vector2u>();
+
+	unsigned int outerX = scaled[0].x, outerY = scaled[0].y, innerX = scaled[0].x, innerY = scaled[0].y;
+
+	for (int i = 1; i < int(scaled.size()); i++) {
+		if (scaled[i].x < innerX) innerX = scaled[i].x;
+		if (scaled[i].y < innerY) innerY = scaled[i].y;
+		if (scaled[i].x > outerX) outerX = scaled[i].x;
+		if (scaled[i].y > outerY) outerY = scaled[i].y;
+	}
+
+	std::vector<sf::Vector2u> pixels;
+
+	for (unsigned int iy = innerY; iy < outerY; iy++) {
+		for (unsigned int ix = innerX; ix < outerX; ix++) {
+			pixels.push_back({ ix,iy });
+		}
+	}
+
+	return pixels;
+}
+
+bool Image::pixelFits(sf::Image * img, unsigned int x, unsigned int y)
+{
+	return x >= 0 && y >= 0 && x < img->getSize().x && y < img->getSize().y;
+}
+
+bool Image::hasPixel(unsigned int x, unsigned int y)
+{
+	return image->getPixel(x, y).a != 0.f;
 }
 
 
