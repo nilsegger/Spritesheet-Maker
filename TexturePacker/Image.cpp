@@ -38,7 +38,7 @@ void Image::crop()
 
 	//if (!findBorders(&p1.x, &p2.x, &p1.y, &p2.y)) return;
 
-	std::cout << p1.x << "#" << p1.y << "-" << p2.x << "#" << p2.y << std::endl;
+	//std::cout << p1.x << "#" << p1.y << "-" << p2.x << "#" << p2.y << std::endl;
 
 	sf::Image * tempImage = new sf::Image;
 	tempImage->create(p2.x - p1.x, p2.y - p1.y, sf::Color::White);
@@ -153,9 +153,27 @@ void Image::scale3placePixels(sf::Image * tempImage, unsigned int y1, unsigned i
 	}
 }
 
-void Image::setPixelArray()
+void Image::setPixels(sf::Image * img, int index1, int index2, unsigned int offsetX, unsigned int offsetY, float scaleAmount)
 {
-	pixelArray = new sf::Uint8[image->getSize().x * image->getSize().y * 6]; //rgba, xy
+	for (int i = index1; i < index2; i++) {
+		int index = i * 6;
+		int posx = unsigned int((pixelArray[index + 4] - offsetX) * scaleAmount);
+		int posy = unsigned int((pixelArray[index + 5] - offsetY) * scaleAmount);
+
+		if (posx < img->getSize().x && posy < img->getSize().y) {
+			sf::Color color = sf::Color::Color(pixelArray[index], pixelArray[index + 1], pixelArray[index + 2], pixelArray[index + 3]);
+			img->setPixel(posx, posy, color);
+		}
+
+	}
+}
+
+void Image::CropAndScale(float scaleAmount, bool multithread)
+{
+
+	pixelArray = new unsigned int[image->getSize().x * image->getSize().y * 6]; //rgba, xy
+
+	
 
 	unsigned int x1 = image->getSize().x, x2 = 0, y1 = image->getSize().y, y2 = 0;
 
@@ -172,44 +190,56 @@ void Image::setPixelArray()
 				pixelArray[pixelsCount * 6 + 3] = image->getPixel(x, y).a;
 				pixelArray[pixelsCount * 6 + 4] = x;
 				pixelArray[pixelsCount * 6 + 5] = y;
+				/*std::cout << x << "#" << y << pixelArray[pixelsCount * 6 + 4] << pixelArray[pixelsCount * 6 + 5] << std::endl;
+				getchar();*/
 				pixelsCount++;
 			}
 		}
 	}
 
-	std::cout << x1 << "#" << y1 << "-" << x2 << "#" << y2 << std::endl;
+	//std::cout << x1 << "#" << y1 << "-" << x2 << "#" << y2 << std::endl;
 
-	sf::Image tempImg;
-	tempImg.create(x2 - x1, y2 - y1, sf::Color::Transparent);
+	sf::Image * tempImg = new sf::Image;
+	tempImg->create(unsigned int((x2 - x1) * scaleAmount), unsigned int((y2 - y1) * scaleAmount), sf::Color::Transparent);
 
-	for (int i = 0; i < pixelsCount; i++) {
-		int index = i * 6;
-		int posx = pixelArray[index + 4] - x1;
-		int posy = pixelArray[index + 5] - y1;
-		tempImg.setPixel(posx, posy, sf::Color::Color(pixelArray[index], pixelArray[index+1], pixelArray[index+2], pixelArray[index+3]));
-	}
+	/*
 
-	tempImg.saveToFile("C:/Users/NILSEGGE/frame0033/test.png");
+	Upscale or downscale
 
-	//make test pixel array for lulz
-	/*sf::Image testimg;
-	testimg.create(x2 - x1, y2 - y1, sf::Color::Transparent);
-	
-	unsigned int x = 0, y = 0;
+	*/
+	if (multithread) {
+		unsigned int splits = std::thread::hardware_concurrency();
 
-	for (int i = 0; i < testpixelcount; i++, x++) {
+		std::thread * threads[100];
 
-		if (x == testimg.getSize().x) {
-			x = 0;
-			y++;
+		for (int i = 0; i < splits; i++) {
+			int index1 = int(i * (pixelsCount / splits));
+			int index2 = int(i * (pixelsCount / splits) + (pixelsCount / splits) - 1);
+
+			//sf::Image * img, int index1, int index2, unsigned int offsetX, unsigned int offsetY, float scaleAmount
+
+			threads[i] = new std::thread(&Image::setPixels, this, tempImg, index1, index2, x1, y1, scaleAmount);
+
 		}
-			testimg.setPixel(x, y, sf::Color::Color(testpixelarr[i * 4], testpixelarr[i * 4 + 1], testpixelarr[i * 4 + 2], testpixelarr[i * 4 + 3]));
-			//std::cout << x << "#" << y << "#" << testpixelarr[i * 4] << "#" << testpixelarr[i * 4 + 1] << "#" << testpixelarr[i * 4 + 2] << "#" << testpixelarr[i * 4 + 3] << std::endl;
-			//getchar();
+
+		for (int i = 0; i < splits; i++) {
+			threads[i]->join();
+		}
 	}
- 
-	testimg.saveToFile("C:/Users/NILSEGGE/frame0033/test.png");*/
-	
+	else {
+		for (int i = 0; i < pixelsCount; i++) {
+			int index = i * 6;
+			int posx = unsigned int((pixelArray[index + 4] - x1) * scaleAmount);
+			int posy = unsigned int((pixelArray[index + 5] - y1) * scaleAmount);
+
+			if (posx < tempImg->getSize().x && posy < tempImg->getSize().y) {
+				sf::Color color = sf::Color::Color(pixelArray[index], pixelArray[index + 1], pixelArray[index + 2], pixelArray[index + 3]);
+				tempImg->setPixel(posx, posy, color);
+			}
+		}
+	}
+	delete image;
+	image = tempImg;
 }
 
 sf::Image * Image::getImage() const
@@ -318,9 +348,10 @@ bool Image::pixelFits(sf::Image * img, unsigned int x, unsigned int y)
 	return x >= 0 && y >= 0 && x < img->getSize().x && y < img->getSize().y;
 }
 
-bool Image::hasPixel(unsigned int x, unsigned int y)
+bool Image::hasPixel(unsigned int x, unsigned int y, sf::Image * img)
 {
-	return image->getPixel(x, y).a != 0.f;
+	if(img == nullptr) return image->getPixel(x, y).a != 0.f;
+	return img->getPixel(x, y).a != 0.f;
 }
 
 

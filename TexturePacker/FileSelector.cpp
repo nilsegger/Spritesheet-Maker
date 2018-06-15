@@ -28,3 +28,24 @@ std::vector<std::string> FileSelector::selectFiles()
 	}
 	return files;
 }
+
+std::string FileSelector::selectPath()
+{
+
+	
+	
+	OPENFILENAME ofn = { sizeof ofn };
+	char file[1024] = "Entire Folder";
+	file[0] = '\0';
+	ofn.lpstrFile = file;
+	ofn.nMaxFile = 1024;
+	ofn.Flags = OFN_EXPLORER;
+
+
+	if (GetSaveFileName(&ofn) == TRUE) {
+		return ofn.lpstrFile;
+	}
+
+	//Entire folder
+	return "none";
+}

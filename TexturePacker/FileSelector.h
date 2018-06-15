@@ -8,4 +8,5 @@
 class FileSelector {
 public:
 	static std::vector<std::string> selectFiles();
+	static std::string selectPath();
 };

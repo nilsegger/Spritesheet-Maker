@@ -70,7 +70,7 @@ bool SpriteSheet::imageFits(sf::Image * image, unsigned int x, unsigned int y)
 void SpriteSheet::saveSpritesheet(std::string path)
 {
 	std::cout << "Saving..." << std::endl;
-	spritesheet->saveToFile(path);
-	std::cout << "Done!" << std::endl;
+	if(spritesheet->saveToFile(path)) std::cout << "Saved spritesheet to " << path << std::endl;
+	else std::cout << "Failed to save spritesheet." << std::endl;
 	delete spritesheet;
 }

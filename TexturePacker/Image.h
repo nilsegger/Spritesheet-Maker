@@ -20,7 +20,7 @@ public:
 
 	sf::Image * getImage() const;
 
-	void setPixelArray();
+	void CropAndScale(float scaleAmount, bool multithread = false);
 private:
 	std::string file;
 	sf::Image * image;
@@ -32,11 +32,13 @@ private:
 
 	std::vector<sf::Vector2u> getNeighbourPixels(sf::Image * img, unsigned int x, unsigned int y, float step);
 	bool pixelFits(sf::Image * img, unsigned int x, unsigned int y);
-	bool hasPixel(unsigned int x, unsigned int y);
+	bool hasPixel(unsigned int x, unsigned int y, sf::Image * img = nullptr);
 	void scale3placePixels(sf::Image * tempImage, unsigned int y1, unsigned int y2, float amount);
 
 	
-	sf::Uint8 * pixelArray;
+	unsigned int * pixelArray;
 	int pixelsCount = 0;
+
+	void setPixels(sf::Image * img, int index1, int index2, unsigned int offsetX, unsigned int offsetY, float scaleAmount);
 	
 };
