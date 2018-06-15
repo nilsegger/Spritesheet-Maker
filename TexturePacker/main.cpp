@@ -4,13 +4,11 @@
 int main() {
 
 
-	Image testImage("C:/Users/NILSEGGE/frame0033/frame0000.png");
+	Image testImage("C:/Users/Nils/Downloads/Stabbing_Sword/frame0000.png");
 	testImage.load();
 
 	sf::Clock testTimer;
 	testImage.setPixelArray();
-
-
 
 	float time = testTimer.getElapsedTime().asSeconds();
 	std::cout << "Test took " << time  << "s to complete." << std::endl;
