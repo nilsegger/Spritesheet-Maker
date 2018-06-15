@@ -15,6 +15,10 @@ sf::Image * SpriteSheet::getSpritesheet()
 
 void SpriteSheet::placeImages()
 {
+
+	std::thread * placeImagesThreads[100];
+	int threadCount = 0;
+
 	unsigned int x = 0, y = 0;
 	unsigned int rowHeight = 0;
 	for (int i = 0; i < int(images.size()); i++) {
@@ -25,7 +29,9 @@ void SpriteSheet::placeImages()
 			rowHeight = 0;
 			x = 0;
 			if (imageFits(image, x, y)) {
-				placeImage(image, x, y);
+				placeImagesThreads[threadCount] = new std::thread(&SpriteSheet::placeImage, this, image, x, y);
+				threadCount++;
+				//placeImage(image, x, y);
 				rowHeight = image->getSize().y;
 				x += padding + image->getSize().x;
 				rowHeight = image->getSize().y;
@@ -37,7 +43,9 @@ void SpriteSheet::placeImages()
 			}
 		}
 		else if (imageFits(image,x,y)) {
-			placeImage(image, x, y);
+			placeImagesThreads[threadCount] = new std::thread(&SpriteSheet::placeImage, this, image, x, y);
+			threadCount++;
+			//placeImage(image, x, y);
 			x += padding + image->getSize().x;
 			if (image->getSize().y > rowHeight) rowHeight = image->getSize().y;
 		}
@@ -48,8 +56,13 @@ void SpriteSheet::placeImages()
 			padding?
 
 		*/
-		delete image;
+		//delete image;
 	}
+
+	for (int i = 0; i < threadCount; i++) {
+		placeImagesThreads[i]->join();
+	}
+
 	//saveSpritesheet();
 }
 
@@ -73,4 +86,7 @@ void SpriteSheet::saveSpritesheet(std::string path)
 	if(spritesheet->saveToFile(path)) std::cout << "Saved spritesheet to " << path << std::endl;
 	else std::cout << "Failed to save spritesheet." << std::endl;
 	delete spritesheet;
+	for (int i = 0; i < int(images.size()); i++) {
+		delete images[i];
+	}
 }
