@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <windows.h>
 
 class Image {
 
@@ -41,4 +42,6 @@ private:
 
 	void setPixels(sf::Image * img, int index1, int index2, unsigned int offsetX, unsigned int offsetY, float scaleAmount);
 	
+	static unsigned int maxThreadsAtOnce;
+	static unsigned int currentThreads;
 };

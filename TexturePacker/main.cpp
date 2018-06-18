@@ -3,17 +3,16 @@
 #include "Spritesheetmaker.h"
 
 
-void prepareImage(std::string path, std::vector<Image*> * images, float scaleImagesBy);
-
+void prepareImage(std::string path, std::vector<Image*> * images, float scaleImagesBy, int index);
 int main() {
 
-	/*Image testImage("C:/Users/Nils/Downloads/Stabbing_Sword/frame0000.png");
+	/*Image testImage("C:/Users/NILSEGGE/frame0033/frame0000.png");
 	testImage.load();
 
 	sf::Clock testTimer;
 	//testImage.CropAndScale(.7f);
 
-	//testImage.CropAndScale(.1f, true);
+	testImage.CropAndScale(.1f, true);
 
 	//testImage.crop();
 	//testImage.scale3(.1f);
@@ -47,23 +46,15 @@ int main() {
 
 	sf::Clock timePassed;
 
-	std::vector<Image*> images;
-	
+	std::vector<Image*> images(files.size());
+
 	std::thread * imgCropScaleThreads[100];
-
 	for (int i = 0; i < int(files.size()); i++) {
-		imgCropScaleThreads[i] = new std::thread(&prepareImage, files[i], &images, scaleImagesBy);
-		/*
-		Image * img = new Image(files[i]);
-		if (!img->load()) {
-			std::cout << "Unable to open file " << files[i] << "." << std::endl;
-		}
-		img->CropAndScale(scaleImagesBy, true);
-		images.push_back(img);*/
+		imgCropScaleThreads[i] = new std::thread(&prepareImage, files[i], &images, scaleImagesBy, i);
 	}
-
 	for (int i = 0; i < int(files.size()); i++) {
 		imgCropScaleThreads[i]->join();
+		delete imgCropScaleThreads[i];
 	}
 
 	//wait for threads
@@ -84,11 +75,11 @@ int main() {
 	return 0;
 }
 
-void prepareImage(std::string path, std::vector<Image*> * images, float scaleImagesBy) {
+void prepareImage(std::string path, std::vector<Image*> * images, float scaleImagesBy, int index) {
 	Image * img = new Image(path);
 	if (!img->load()) {
 		std::cout << "Unable to open image " << path<< "." << std::endl;
 	}
 	img->CropAndScale(scaleImagesBy, true);
-	images->push_back(img);
+	(*images)[index] = img;
 }

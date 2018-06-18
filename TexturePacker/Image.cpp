@@ -1,5 +1,8 @@
 #include "Image.h"
 
+unsigned int Image::currentThreads = 0;
+unsigned int Image::maxThreadsAtOnce = 1;
+
 Image::Image(std::string file)
 	:file(file), image(nullptr)
 {
@@ -157,8 +160,8 @@ void Image::setPixels(sf::Image * img, int index1, int index2, unsigned int offs
 {
 	for (int i = index1; i < index2; i++) {
 		int index = i * 6;
-		int posx = unsigned int((pixelArray[index + 4] - offsetX) * scaleAmount);
-		int posy = unsigned int((pixelArray[index + 5] - offsetY) * scaleAmount);
+		unsigned int posx = unsigned int((pixelArray[index + 4] - offsetX) * scaleAmount);
+		unsigned int posy = unsigned int((pixelArray[index + 5] - offsetY) * scaleAmount);
 
 		if (posx < img->getSize().x && posy < img->getSize().y) {
 			sf::Color color = sf::Color::Color(pixelArray[index], pixelArray[index + 1], pixelArray[index + 2], pixelArray[index + 3]);
@@ -171,10 +174,11 @@ void Image::setPixels(sf::Image * img, int index1, int index2, unsigned int offs
 void Image::CropAndScale(float scaleAmount, bool multithread)
 {
 
+	//while (currentThreads >= maxThreadsAtOnce); //Not getting any different result
+
+	currentThreads++;
+
 	pixelArray = new unsigned int[image->getSize().x * image->getSize().y * 6]; //rgba, xy
-
-	
-
 	unsigned int x1 = image->getSize().x, x2 = 0, y1 = image->getSize().y, y2 = 0;
 
 	for (unsigned int y = 0; y < image->getSize().y; y++) {
@@ -212,7 +216,7 @@ void Image::CropAndScale(float scaleAmount, bool multithread)
 
 		std::thread * threads[100];
 
-		for (int i = 0; i < splits; i++) {
+		for (int i = 0; i < int(splits); i++) {
 			int index1 = int(i * (pixelsCount / splits));
 			int index2 = int(i * (pixelsCount / splits) + (pixelsCount / splits) - 1);
 
@@ -222,15 +226,15 @@ void Image::CropAndScale(float scaleAmount, bool multithread)
 
 		}
 
-		for (int i = 0; i < splits; i++) {
+		for (int i = 0; i < int(splits); i++) {
 			threads[i]->join();
 		}
 	}
 	else {
 		for (int i = 0; i < pixelsCount; i++) {
 			int index = i * 6;
-			int posx = unsigned int((pixelArray[index + 4] - x1) * scaleAmount);
-			int posy = unsigned int((pixelArray[index + 5] - y1) * scaleAmount);
+			unsigned int posx = unsigned int((pixelArray[index + 4] - x1) * scaleAmount);
+			unsigned int posy = unsigned int((pixelArray[index + 5] - y1) * scaleAmount);
 
 			if (posx < tempImg->getSize().x && posy < tempImg->getSize().y) {
 				sf::Color color = sf::Color::Color(pixelArray[index], pixelArray[index + 1], pixelArray[index + 2], pixelArray[index + 3]);
@@ -238,8 +242,10 @@ void Image::CropAndScale(float scaleAmount, bool multithread)
 			}
 		}
 	}
+	delete pixelArray;
 	delete image;
 	image = tempImg;
+	currentThreads--;
 }
 
 sf::Image * Image::getImage() const
