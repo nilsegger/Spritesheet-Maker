@@ -18,8 +18,18 @@ sf::Vector2u Spritesheet::getPosition(int index)
 		return sf::Vector2u(0, 0);
 	}
 
-	unsigned int x, y;
+	unsigned int x = 0, y = 0;
 
+	for (int i = 0; i < index; i++) {
+		x++;
+		if (x >= spritesPerRow) {
+			x = 0;
+			y++;
+		}
+	}
+	
+	x = x * spriteSize.x;
+	y = y * spriteSize.y;
 
 	//Gives me too much problems
 	/*x = index % spritesPerRow * spriteSize.x;
