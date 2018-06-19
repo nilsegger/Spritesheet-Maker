@@ -22,6 +22,8 @@ public:
 	void scaleImageFromPixelArrayIntoImage();
 	void scaleImageFromPixelArrayIntoImageMultiThread();
 
+	void cropAndScale();
+
 	void saveTo(std::string path);
 
 	void merge(Image * other, bool isBackground = false);

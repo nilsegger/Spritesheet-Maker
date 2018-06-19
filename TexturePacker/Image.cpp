@@ -136,6 +136,12 @@ void Image::scaleImageFromPixelArrayIntoImageMultiThread()
 	pixelArray = nullptr;
 }
 
+void Image::cropAndScale()
+{
+	cropIntoPixelArray();
+	scaleImageFromPixelArrayIntoImageMultiThread();
+}
+
 void Image::saveTo(std::string path)
 {
 	image->saveToFile(path);

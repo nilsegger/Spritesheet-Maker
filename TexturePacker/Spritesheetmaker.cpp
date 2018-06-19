@@ -63,7 +63,6 @@ bool Spritesheet::prepareSpritesheet(sf::Vector2u spriteSize, unsigned int count
 
 	spritesheet = new sf::Image;
 	spritesheet->create(size.x, size.y, sf::Color::Transparent);
-
 	return true;
 }
 
