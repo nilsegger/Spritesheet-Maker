@@ -1,92 +1,88 @@
 #include "Spritesheetmaker.h"
 
-SpriteSheet::SpriteSheet(sf::Vector2u size, std::vector<Image*> images)
-	:size(size), images(images)
+Spritesheet::Spritesheet()
 {
-	spritesheet = new sf::Image;
-	spritesheet->create(size.x, size.y, sf::Color::Transparent);
-	placeImages();
 }
 
-sf::Image * SpriteSheet::getSpritesheet()
+sf::Image * Spritesheet::getSpritesheet()
 {
 	return spritesheet;
 }
 
-void SpriteSheet::placeImages()
+
+sf::Vector2u Spritesheet::getPosition(int index)
 {
-
-	std::thread * placeImagesThreads[100];
-	int threadCount = 0;
-
-	unsigned int x = 0, y = 0;
-	unsigned int rowHeight = 0;
-	for (int i = 0; i < int(images.size()); i++) {
-		sf::Image * image = images[i]->getImage();
-
-		if (!imageFits(image,x,y)) {
-			y += rowHeight + padding;
-			rowHeight = 0;
-			x = 0;
-			if (imageFits(image, x, y)) {
-				placeImagesThreads[threadCount] = new std::thread(&SpriteSheet::placeImage, this, image, x, y);
-				threadCount++;
-				//placeImage(image, x, y);
-				rowHeight = image->getSize().y;
-				x += padding + image->getSize().x;
-				rowHeight = image->getSize().y;
-			}
-			else {
-				std::cout << "Images dont fit... At image " << i + 1 << "of" << int(images.size()) << std::endl;
-				saveSpritesheet();
-				return;
-			}
-		}
-		else if (imageFits(image,x,y)) {
-			placeImagesThreads[threadCount] = new std::thread(&SpriteSheet::placeImage, this, image, x, y);
-			threadCount++;
-			//placeImage(image, x, y);
-			x += padding + image->getSize().x;
-			if (image->getSize().y > rowHeight) rowHeight = image->getSize().y;
-		}
-		/*
-			Place pixels
-			set offset
-			check whetever everything fits
-			padding?
-
-		*/
-		//delete image;
+	if (spritesPerRow == 0 || rowsCount == 0) {
+		std::cout << "spritesPerRow or rowsCount is 0" << std::endl;
+		return sf::Vector2u(0, 0);
 	}
 
-	for (int i = 0; i < threadCount; i++) {
-		placeImagesThreads[i]->join();
-	}
-
-	//saveSpritesheet();
+	unsigned int x, y;
+	x = index % spritesPerRow * spriteSize.x;
+	if (index % spritesPerRow >= 2) x -= spriteSize.x;
+	y = unsigned int(index / rowsCount) *  spriteSize.y;
+	return sf::Vector2u(x,y);
 }
 
-void SpriteSheet::placeImage(sf::Image * image, unsigned int x, unsigned int y)
+void Spritesheet::placeImage(sf::Image * image, unsigned int x, unsigned int y)
 {
-	for (unsigned int ix = 0; ix < image->getSize().x; ix++) {
-		for (unsigned int iy = 0; iy < image->getSize().y; iy++) {
-			spritesheet->setPixel(x + ix, y + iy, image->getPixel(ix, iy));
+	for (unsigned int iy = 0; iy < image->getSize().y; iy++) {
+		for (unsigned int ix = 0; ix < image->getSize().x; ix++) {
+			spritesheet->setPixel(ix + x, iy + y, image->getPixel(ix, iy));
 		}
 	}
 }
 
-bool SpriteSheet::imageFits(sf::Image * image, unsigned int x, unsigned int y)
-{
-	return (x + image->getSize().x < spritesheet->getSize().x && y + image->getSize().y < spritesheet->getSize().y);
-}
-
-void SpriteSheet::saveSpritesheet(std::string path)
+void Spritesheet::saveSpritesheet(std::string path)
 {
 	std::cout << "Saving..." << std::endl;
 	if(spritesheet->saveToFile(path)) std::cout << "Saved spritesheet to " << path << std::endl;
 	else std::cout << "Failed to save spritesheet." << std::endl;
 	delete spritesheet;
-	for (int i = 0; i < int(images.size()); i++) {
-		delete images[i];
-	}
 }
+
+bool Spritesheet::prepareSpritesheet(sf::Vector2u spriteSize, unsigned int count, unsigned int maxWidth, unsigned int maxHeight, unsigned int padding)
+{
+	if (spritesheet != nullptr) delete spritesheet;
+
+	this->spriteSize = { spriteSize.x + 2 * padding, spriteSize.y + 2 * padding };
+
+	spritesPerRow = unsigned int(maxWidth / this->spriteSize.x);
+	rowsCount = unsigned int(maxHeight / this->spriteSize.y);
+
+	if (rowsCount * spritesPerRow < count) {
+		std::cout << "Sprites wont fit" << std::endl;
+		return false;
+	}
+
+	sf::Vector2u size = sf::Vector2u(spritesPerRow * this->spriteSize.x /*+ this->spriteSize.x*/, getPosition(count).y + this->spriteSize.y);
+
+	if (count < spritesPerRow) {
+		size.x = spriteSize.x * count;
+	}
+
+	spritesheet = new sf::Image;
+	spritesheet->create(size.x, size.y, sf::Color::Transparent);
+
+	return true;
+}
+
+void Spritesheet::placeImage(Image * image, int index)
+{
+	sf::Vector2u position = getPosition(index);
+	sf::Vector2u centeringOffset = (spriteSize - image->getImage()->getSize());
+	centeringOffset.x /= 2;
+	centeringOffset.y /= 2;
+	placeImage(image->getImage(), position.x + centeringOffset.x, position.y + centeringOffset.y);
+}
+
+sf::Vector2u Spritesheet::getBiggestSpriteSize(std::vector<Image*> & images)
+{
+	sf::Vector2u size = { 0,0 };
+	for (int i = 0; i < int(images.size()); i++) {
+		if (images[i]->getSpriteSize().x > size.x) size.x = images[i]->getSpriteSize().x;
+		if (images[i]->getSpriteSize().y > size.y) size.y = images[i]->getSpriteSize().y;
+	}
+	return size;
+}
+
