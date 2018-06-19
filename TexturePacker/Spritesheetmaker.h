@@ -3,6 +3,7 @@
 #include <SFML\Graphics.hpp>
 #include <vector>
 #include "Image.h"
+#include <fstream>
 
 class Spritesheet {
 
@@ -20,6 +21,8 @@ private:
 	sf::Vector2u spriteSize = { 0,0 };
 	unsigned int spritesPerRow;
 	unsigned int rowsCount;
+
+	
 private:
 	sf::Vector2u getPosition(int index);
 	void placeImage(sf::Image * image, unsigned int x, unsigned int y);

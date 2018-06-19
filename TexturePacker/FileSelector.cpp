@@ -29,6 +29,20 @@ std::vector<std::string> FileSelector::selectFiles()
 	return files;
 }
 
+std::vector<std::string> FileSelector::orderFiles(std::vector<std::string> files)
+{
+
+	for (int i = 0; i < int(files.size()) - 1; i++) {
+		if (getValue(files[i]) > getValue(files[i + 1])) {
+			std::string temp = files[i];
+			files[i] = files[i + 1];
+			files[i + 1] = temp;
+			i = 0;
+		}
+	}
+	return files;
+}
+
 std::string FileSelector::selectPath()
 {
 
@@ -48,4 +62,10 @@ std::string FileSelector::selectPath()
 
 	//Entire folder
 	return "none";
+}
+
+int FileSelector::getValue(std::string str)
+{
+	std::string numbers = str.substr(str.length() - 8, 4); // - gnp.0000 + 0000
+	return std::stoi(numbers);
 }

@@ -1,6 +1,7 @@
 #include "Spritesheetmaker.h"
 
 Spritesheet::Spritesheet()
+	
 {
 }
 
@@ -18,9 +19,13 @@ sf::Vector2u Spritesheet::getPosition(int index)
 	}
 
 	unsigned int x, y;
-	x = index % spritesPerRow * spriteSize.x;
-	if (index % spritesPerRow >= 2) x -= spriteSize.x;
+
+
+	//Gives me too much problems
+	/*x = index % spritesPerRow * spriteSize.x;
+	//if (index % spritesPerRow >= 1) x -= spriteSize.x;
 	y = unsigned int(index / rowsCount) *  spriteSize.y;
+	std::cout<< index << "#" << x << "#" << y << std::endl;*/
 	return sf::Vector2u(x,y);
 }
 
@@ -36,8 +41,16 @@ void Spritesheet::placeImage(sf::Image * image, unsigned int x, unsigned int y)
 void Spritesheet::saveSpritesheet(std::string path)
 {
 	std::cout << "Saving..." << std::endl;
-	if(spritesheet->saveToFile(path)) std::cout << "Saved spritesheet to " << path << std::endl;
+	if (spritesheet->saveToFile(path)) {
+
+		std::ofstream file(path + ".info.txt");
+		file << "Grid Dimensions.\n X: " << spriteSize.x << "#" << spriteSize.y;
+		file.close();
+		std::cout << "Saved spritesheet to " << path << std::endl;
+	}
 	else std::cout << "Failed to save spritesheet." << std::endl;
+	
+
 	delete spritesheet;
 }
 
