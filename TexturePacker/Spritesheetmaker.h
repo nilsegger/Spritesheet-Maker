@@ -5,6 +5,7 @@
 #include "Image.h"
 #include <fstream>
 
+
 class Spritesheet {
 
 public:
@@ -12,18 +13,20 @@ public:
 
 	sf::Image * getSpritesheet();
 	void saveSpritesheet(std::string path = "C:/Users/NILSEGGE/Pictures/spritesheet.png");
-	bool prepareSpritesheet(sf::Vector2u spriteSize, unsigned int count, unsigned int maxWidth, unsigned int maxHeight, unsigned int padding = 0);
-	void placeImage(Image * image, int index);
 
+	/*Functions for spritesheet using a grid*/
+	bool prepareGridSpritesheet(sf::Vector2u spriteSize, unsigned int count, unsigned int maxWidth, unsigned int maxHeight, unsigned int padding = 0);
+	void placeImage(Image * image, int index);
 	sf::Vector2u getBiggestSpriteSize(std::vector<Image*> & images);
 private:
+	/*Grid*/
 	sf::Image * spritesheet = nullptr;
 	sf::Vector2u spriteSize = { 0,0 };
 	unsigned int spritesPerRow;
 	unsigned int rowsCount;
 
-	
 private:
 	sf::Vector2u getPosition(int index);
 	void placeImage(sf::Image * image, unsigned int x, unsigned int y);
+
 };

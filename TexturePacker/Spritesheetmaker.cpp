@@ -64,7 +64,7 @@ void Spritesheet::saveSpritesheet(std::string path)
 	delete spritesheet;
 }
 
-bool Spritesheet::prepareSpritesheet(sf::Vector2u spriteSize, unsigned int count, unsigned int maxWidth, unsigned int maxHeight, unsigned int padding)
+bool Spritesheet::prepareGridSpritesheet(sf::Vector2u spriteSize, unsigned int count, unsigned int maxWidth, unsigned int maxHeight, unsigned int padding)
 {
 	if (spritesheet != nullptr) delete spritesheet;
 

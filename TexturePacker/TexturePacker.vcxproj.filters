@@ -27,6 +27,9 @@
     <ClCompile Include="Spritesheetmaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PackedSpritesheet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileSelector.h">
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Spritesheetmaker.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PackedSpritesheet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

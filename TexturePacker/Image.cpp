@@ -1,5 +1,10 @@
 #include "Image.h"
 
+Image::Image()
+{
+	scaleAmount = 1.f;
+}
+
 Image::Image(std::string file, float scaleAmount)
 	:file(file), image(nullptr), scaleAmount(scaleAmount)
 {
@@ -17,6 +22,7 @@ bool Image::load()
 	setBorders();
 	return true;
 }
+
 
 void Image::setPixels(sf::Image * img, int index1, int index2, unsigned int offsetX, unsigned int offsetY, float scaleAmount)
 {

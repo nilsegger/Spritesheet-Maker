@@ -116,11 +116,13 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="PackedSpritesheet.cpp" />
     <ClCompile Include="Spritesheetmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileSelector.h" />
     <ClInclude Include="Image.h" />
+    <ClInclude Include="PackedSpritesheet.h" />
     <ClInclude Include="Spritesheetmaker.h" />
   </ItemGroup>
   <ItemGroup>

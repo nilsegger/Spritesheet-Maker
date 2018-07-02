@@ -9,10 +9,10 @@
 class Image {
 
 public:
+	Image();
 	Image(std::string file, float scaleAmount = 1.f);
 	~Image();
 	bool load();
-
 
 	sf::Image * getImage() const;
 
